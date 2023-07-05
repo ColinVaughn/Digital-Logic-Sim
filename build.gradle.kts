@@ -1,5 +1,5 @@
 plugins {
-    id("java")
+    java
 }
 
 group = "org.colin"
@@ -7,6 +7,12 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+}
+
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = "org.colin.Main"
+    }
 }
 
 dependencies {
