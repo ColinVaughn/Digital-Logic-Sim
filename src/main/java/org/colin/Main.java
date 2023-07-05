@@ -36,21 +36,28 @@ class Main extends JFrame {
 
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
+                boolean clickedOnNode = false;
                 for (Gate gate : gates) {
-                    // Check if the click is on the output point of a gate
+                    // Check if the click is on any input point
+                    for (Point inputPoint : gate.getInputPoints()) {
+                        if (inputPoint.equals(e.getPoint())) {
+                            clickedOnNode = true;
+                            break;
+                        }
+                    }
+                    // Check if the click is on the output point
                     if (gate.getOutputPoint().equals(e.getPoint())) {
-                        selectedGate = gate;
-                        currentWire = new Wire(gate.getOutputPoint(), e.getPoint());
-                        wires.add(currentWire);
+                        clickedOnNode = true;
+                    }
+                    if (clickedOnNode) {
                         break;
                     }
-                    // Check if the click is on the input point of a gate
-                    for (int i = 0; i < gate.getInputPoints().size(); i++) {
-                        if (gate.getInputPoints().get(i).equals(e.getPoint())) {
+                }
+
+                if (!clickedOnNode) {
+                    for (Gate gate : gates) {
+                        if (gate.getBounds().contains(e.getPoint())) {
                             selectedGate = gate;
-                            currentWire = new Wire(e.getPoint(), gate.getInputPoints().get(i));
-                            wires.add(currentWire);
-                            selectedGate.connectInputWire(currentWire);
                             break;
                         }
                     }
@@ -62,6 +69,9 @@ class Main extends JFrame {
                 currentWire = null;
             }
         });
+
+
+
 
 
         addMouseMotionListener(new MouseMotionAdapter() {
@@ -201,8 +211,8 @@ class Main extends JFrame {
                 g2d.drawLine(0, HEIGHT / 4, WIDTH / 2, HEIGHT / 4);
                 g2d.drawLine(0, HEIGHT * 3 / 4, WIDTH / 2, HEIGHT * 3 / 4);
                 g2d.drawArc(WIDTH / 2 - HEIGHT / 4, HEIGHT / 4, HEIGHT / 2, HEIGHT / 2, -90, 180);
-                g2d.drawLine(WIDTH / 2, HEIGHT / 4, WIDTH / 2, HEIGHT * 3 / 4);
-                g2d.drawLine(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT / 2);
+                g2d.drawLine(WIDTH / 2, HEIGHT / 4, WIDTH, HEIGHT / 2);
+                g2d.drawLine(WIDTH / 2, HEIGHT * 3 / 4, WIDTH, HEIGHT / 2);
             }
         }
     }
@@ -216,30 +226,36 @@ class Main extends JFrame {
             this.endPoint = endPoint;
         }
 
-        public Line2D.Double getLine() {
+        public Line2D getLine() {
             return new Line2D.Double(startPoint, endPoint);
+        }
+
+        public boolean hasValidSignal() {
+            // Simulate wire connection and check if the start point gate has a valid input
+            if (startPoint != null) {
+                Gate startGate = getConnectedGate(startPoint);
+                if (startGate != null) {
+                    return startGate.hasValidInput();
+                }
+            }
+            return false;
+        }
+
+        private Gate getConnectedGate(Point point) {
+            for (Gate gate : gates) {
+                if (gate.getBounds().contains(point)) {
+                    return gate;
+                }
+            }
+            return null;
         }
 
         public void setEndPoint(Point endPoint) {
             this.endPoint = endPoint;
         }
-
-        public boolean hasValidSignal() {
-            for (Gate gate : gates) {
-                if (gate.getOutputPoint().equals(startPoint)) {
-                    return gate.hasValidInput();
-                }
-            }
-            return false;
-        }
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                new Main();
-            }
-        });
+        new Main();
     }
 }
-
